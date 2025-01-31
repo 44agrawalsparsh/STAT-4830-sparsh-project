@@ -1,0 +1,15 @@
+numpy        # Numerical computing (used extensively for handling arrays)
+pandas       # Data handling and manipulation (optional, if needed for player stats or auction tracking)
+torch           # PyTorch for deep learning (neural network training)
+scipy         # Scientific computing (optional, if you need advanced optimization or stats functions)
+matplotlib     # Visualization library (optional, for plotting training results, learning curves, etc.)
+scikit-learn    # Machine learning algorithms (optional, for simpler models, regression, etc.)
+gymnasium            # OpenAI Gym for defining and running the auction environment
+tensorboard   # TensorBoard for visualizing the model training process
+ray             # Distributed computing (for parallelizing MCTS simulations)
+torchvision    # If you're using convolutional layers (optional, could be part of your model)
+optuna        # Hyperparameter optimization (optional, for tuning model parameters)
+pyyaml          # For configuration management (optional, for storing model settings)
+flask         # For creating APIs to interact with the auction model (if applicable)
+pytest         # Testing framework (optional, for testing your simulations)
+joblib          # For parallelizing tasks, saving models (optional)
