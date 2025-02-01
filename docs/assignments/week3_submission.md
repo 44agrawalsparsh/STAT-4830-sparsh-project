@@ -159,7 +159,11 @@ My initial work simulates an auction draft with chosen strategies. To make the M
 Users can try a few basic strategies including an MCTS. While the MCTS does not always "win" the draft - it is usually one of the better strategies.
 
 
-An example draft of 
+An couple of simulated drafts can be seen in test_outputs. In the first draft, we had one monte carlo agent which finished 2nd (higher score is better) and in the second draft with 3 monte carlo agents they finished, 1st, 2nd and 4th. 
+
+This is to say while naive strategies such as bidding up to the players mean score / sum scores can be competitive with the monte carlo agent it still performs better than ultra trivial strategies such as always flipping which the monte carlo agent assumes.
+
+The makes me more confident that when we use self-play RL with MCTS which will improve the assumptions that we make when simulating the game, we will generate more optimal strategies.
 
 
 - **Current limitations** 
@@ -194,6 +198,9 @@ I need to make sure the pipeline for a self-play reinforcement learning with MCT
 1. How feasible is my current project vis a vis compute
 2. What are some other RL techniques to explore? I couldn't find other systems that would work for my problem well.
 3. Better ways to formulate my problem?
+4. What is the best way to apply an Alpha Go Zero esque system with hidden information. Is making rigid assumptions about things such as the distribution of players in general ok? I think I would need these to simulate potential hidden states.
+
+
 - **Alternative approaches to try** 
 Maybe if I can define a class of bidding strategies an evolutionary algorithm might work. I am skeptical of this though.
 
