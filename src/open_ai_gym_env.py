@@ -22,7 +22,6 @@ class AuctionGymEnv(gym.Env):
         self.action_space = spaces.Discrete(2)  # Two actions: pass (0) or bid (1)
         self.observation_space = spaces.Dict({
             "members_means": spaces.Box(low=0, high=np.inf, shape=(self.num_players,), dtype=np.float32),
-            "members_variances": spaces.Box(low=0, high=np.inf, shape=(self.num_players,), dtype=np.float32),
             "budgets": spaces.Box(low=0, high=np.inf, shape=(self.num_players,), dtype=np.int32),
             "members_forwards_needed": spaces.Box(low=0, high=self.num_forwards, shape=(self.num_players,), dtype=np.int32),
             "member_defense_needed": spaces.Box(low=0, high=self.num_defensemen, shape=(self.num_players,), dtype=np.int32),
@@ -32,16 +31,15 @@ class AuctionGymEnv(gym.Env):
             "goalies_left": spaces.Box(low=0, high=self.num_players * self.num_goalies, shape=(), dtype=np.int32),
             "nominated_player": spaces.Dict({
                 "mean": spaces.Box(low=0, high=np.inf, shape=(), dtype=np.float32),
-                "variance": spaces.Box(low=0, high=np.inf, shape=(), dtype=np.float32),
                 "position": spaces.Discrete(3)  # 0: Forward, 1: Defenseman, 2: Goalie
             }),
             "current_bid": spaces.Box(low=0, high=np.inf, shape=(), dtype=np.int32),
             "current_bidder": spaces.MultiBinary(self.num_players),
             "bidders_left": spaces.MultiBinary(self.num_players),
             "athletes_left": spaces.Dict({
-                "forwards": spaces.Box(low=0, high=np.inf, shape=(self.num_players * self.num_forwards, 2), dtype=np.float32),
-                "defensemen": spaces.Box(low=0, high=np.inf, shape=(self.num_players * self.num_defensemen, 2), dtype=np.float32),
-                "goalies": spaces.Box(low=0, high=np.inf, shape=(self.num_players * self.num_goalies, 2), dtype=np.float32)
+                "forwards": spaces.Box(low=0, high=np.inf, shape=(self.num_players * self.num_forwards,), dtype=np.float32),
+                "defensemen": spaces.Box(low=0, high=np.inf, shape=(self.num_players * self.num_defensemen,), dtype=np.float32),
+                "goalies": spaces.Box(low=0, high=np.inf, shape=(self.num_players * self.num_goalies,), dtype=np.float32)
             })
         })
 

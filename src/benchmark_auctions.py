@@ -12,22 +12,22 @@ class MONTE_CARLO_STRATEGY:
         self.env = env
         self.num_simulations = num_simulations
 
-    def monte_carlo_simulation(self, action):
+    def monte_carlo_simulation(env, action, num_simulations):
         total_reward = 0
-        player_idx = self.env.env.current_bidder
-        for _ in range(self.num_simulations):
-            env_copy = copy.deepcopy(self.env)
+        player_idx = env.env.current_bidder
+        for _ in range(num_simulations):
+            env_copy = copy.deepcopy(env)
             env_copy.step(action)
             while not env_copy.env.game_over:
                 random_action = env_copy.action_space.sample()
                 env_copy.step(random_action)
 
             total_reward += env_copy.get_payouts()[player_idx]  # Assuming get_reward method exists
-        return total_reward / self.num_simulations
+        return total_reward / num_simulations
 
-    def monte_carlo_worker(self, args):
+    def monte_carlo_worker(args):
         env, action, num_simulations = args
-        return self.monte_carlo_simulation(action)
+        return MONTE_CARLO_STRATEGY.monte_carlo_simulation(env, action, num_simulations)
 
     def monte_carlo_strategy(self):
         best_action = None
@@ -35,17 +35,30 @@ class MONTE_CARLO_STRATEGY:
         num_processes = 4
         simulations_per_process = self.num_simulations // num_processes
 
-        with Pool(num_processes) as pool:
-            for action in range(self.env.action_space.n):
-                scores = pool.map(self.monte_carlo_worker, [(self.env, action, simulations_per_process) for _ in range(num_processes)])
-                score = np.mean(scores)
-                action_text = "pass" if action == 0 else "bid"
-                print(f"Action: {action_text}, Score: {score}")
-                if score > best_score:
-                    best_score = score
-                    best_action = action
+        scores = run_single_core(self.env, num_processes, simulations_per_process) #run_multiprocessing(self.env, num_processes, simulations_per_process) #run_single_core(self.env, num_processes, simulations_per_process)
+        for action, score in scores.items():
+            action_text = "pass" if action == 0 else "bid"
+            #print(f"Action: {action_text}, Score: {score}")
+            if score > best_score:
+                best_score = score
+                best_action = action
         return best_action
     
+def run_single_core(env, num_processes, sims):
+    scores = {}
+    for action in range(env.action_space.n):
+        action_scores = [MONTE_CARLO_STRATEGY.monte_carlo_simulation(env, action, sims) for _ in range(num_processes)]
+        scores[action] = np.mean(action_scores)
+    return scores
+
+def run_multiprocessing(env, num_processes, simulations_per_process):
+    scores = {}
+    with Pool(num_processes) as pool:
+        for action in range(env.action_space.n):
+            action_scores = pool.map(MONTE_CARLO_STRATEGY.monte_carlo_worker, [(env, action, simulations_per_process) for _ in range(num_processes)])
+            scores[action] = np.mean(action_scores)
+    return scores
+
 class FLIP:
     ''' 
         
@@ -59,6 +72,19 @@ class FLIP:
     
     def flip_strategy(self):
         return np.random.choice([0, 1], p=[1 - self.p, self.p])
+    
+class ALWAYS_BID:
+    ''' 
+        
+        Very naive class of strategies where we always bid
+        
+    '''
+
+    def __init__(self, env):
+        self.env = env
+    
+    def always_bid(self):
+        return 1
     
 class PROPORTIONAL_STRATEGY:
     ''' 
@@ -92,15 +118,15 @@ class PROPORTIONAL_STRATEGY:
         if cur_player["position"] == AuctionEnv.Position.FORWARD:
             rel_budget = forward_budget
             for athlete in state["athletes_left"]["forwards"]:
-                pos_sum += athlete[0]
+                pos_sum += athlete
         elif cur_player["position"] == AuctionEnv.Position.DEFENSEMAN:
             rel_budget = defenseman_budget
             for athlete in state["athletes_left"]["defensemen"]:
-                pos_sum += athlete[0]
+                pos_sum += athlete
         elif cur_player["position"] == AuctionEnv.Position.GOALIE:
             rel_budget = goalie_budget
             for athlete in state["athletes_left"]["goalies"]:
-                pos_sum += athlete[0]
+                pos_sum += athlete
 
         fair = cur_player["mean"] / pos_sum * rel_budget
 
@@ -129,13 +155,13 @@ class VALUE_ABOVE_REPLACEMENT_STRATEGY:
         }
 
         for athlete in state["athletes_left"]["forwards"]:
-            self.min_values["forward"] = min(self.min_values["forward"], athlete[0])
+            self.min_values["forward"] = min(self.min_values["forward"], athlete)
 
         for athlete in state["athletes_left"]["defensemen"]:
-            self.min_values["defenseman"] = min(self.min_values["defenseman"], athlete[0])
+            self.min_values["defenseman"] = min(self.min_values["defenseman"], athlete)
         
         for athlete in state["athletes_left"]["goalies"]:  
-            self.min_values["goalie"] = min(self.min_values["goalie"], athlete[0])
+            self.min_values["goalie"] = min(self.min_values["goalie"], athlete)
 
         if state["nominated_player"]["position"] == AuctionEnv.Position.FORWARD:
             self.min_values["forward"] = min(self.min_values["forward"], state["nominated_player"]["mean"])
@@ -166,15 +192,15 @@ class VALUE_ABOVE_REPLACEMENT_STRATEGY:
         add_on_sum -= get_replacement_value(cur_player["position"])
         if cur_player["position"] == AuctionEnv.Position.FORWARD:
             for athlete in state["athletes_left"]["forwards"]:
-                add_on_sum += athlete[0]
+                add_on_sum += athlete
                 add_on_sum -= get_replacement_value(AuctionEnv.Position.FORWARD)
         elif cur_player["position"] == AuctionEnv.Position.DEFENSEMAN:
             for athlete in state["athletes_left"]["defensemen"]:
-                add_on_sum += athlete[0]
+                add_on_sum += athlete
                 add_on_sum -= get_replacement_value(AuctionEnv.Position.DEFENSEMAN)
         elif cur_player["position"] == AuctionEnv.Position.GOALIE:
             for athlete in state["athletes_left"]["goalies"]:
-                add_on_sum += athlete[0]
+                add_on_sum += athlete
                 add_on_sum -= get_replacement_value(AuctionEnv.Position.GOALIE)
 
         var = cur_player["mean"]
@@ -193,24 +219,21 @@ def run_auction(export_file, strategies_dict):
     state = env.reset()
     done = False
 
-    print("Auctioning off: ")
+    #print("Auctioning off: ")
     positions = {AuctionEnv.Position.FORWARD: [], AuctionEnv.Position.DEFENSEMAN: [], AuctionEnv.Position.GOALIE: []}
     for player in env.env.archive_athletes:
         positions[player.position].append(player)
 
+    '''
     for position in positions:
         positions[position].sort(key=lambda x: x, reverse=True)
-
-    athlete_rankings = {}
-    for position, players in positions.items():
-        for rank, player in enumerate(players, start=1):
-            athlete_rankings[player.rand] = rank
-
-    for player in sorted(env.env.athletes, key=lambda x: athlete_rankings[x.rand]):
-        print(f"Player {player}, Rank: {athlete_rankings[player.rand]})")
-
+        print(position)
+        for i,player in enumerate(positions[position]):
+            print(f"{player}, Rank: {i+1}")
+    '''
     player_strategies = []
     for i in range(6):
+        #print(strategies_dict)
         strategy_info = strategies_dict.get(i)
         if strategy_info is None:
             raise ValueError(f"No strategy provided for player {i}")
@@ -224,35 +247,50 @@ def run_auction(export_file, strategies_dict):
             player_strategies.append(PROPORTIONAL_STRATEGY(env, strategy_info['weight_vector']))
         elif strategy_type == 'value_above_replacement':
             player_strategies.append(VALUE_ABOVE_REPLACEMENT_STRATEGY(env))
+        elif strategy_type == 'always_bid':
+            player_strategies.append(ALWAYS_BID(env))
         else:
             raise ValueError(f"Unknown strategy type {strategy_type} for player {i}")
-
+        
+    '''for i in range(10):
+        print()
+    print(f"Player {env.env.nominated_player} is now up for auction.")
+    '''
     while not done:
         current_bidder = env.env.current_bidder
-        print(f"{current_bidder} is deciding whether to pass or bid. Current bid is {env.env.current_bid} for {env.env.nominated_player}")
-        print(f"This player is ranked {athlete_rankings[env.env.nominated_player.rand]}")
+        #print(f"{current_bidder} is deciding whether to pass or bid. Current bid is {env.env.current_bid} for {env.env.nominated_player}")
+        #print(f"This player is ranked {athlete_rankings[env.env.nominated_player.rand]}")
+        player = env.env.nominated_player
         
         strategy = player_strategies[current_bidder]
         if isinstance(strategy, MONTE_CARLO_STRATEGY):
-            print("MONTE CARLO STRAT")
+            #print("MONTE CARLO STRAT")
             action = strategy.monte_carlo_strategy()
         elif isinstance(strategy, FLIP):
-            print("FLIP STRAT")
+            #print("FLIP STRAT")
             action = strategy.flip_strategy()
         elif isinstance(strategy, PROPORTIONAL_STRATEGY):
-            print("PROPORTIONAL STRAT")
+            #print("PROPORTIONAL STRAT")
             action = strategy.proportional_strategy()
         elif isinstance(strategy, VALUE_ABOVE_REPLACEMENT_STRATEGY):
-            print("VALUE ABOVE REPLACEMENT STRAT")
+            #print("VALUE ABOVE REPLACEMENT STRAT")
             action = strategy.value_above_replacement_strategy()
+        elif isinstance(strategy, ALWAYS_BID):
+            #print("ALWAYS BID STRAT")
+            action = strategy.always_bid()
         
         action_text = "pass" if action == 0 else "bid"
-        print(f"Decision: {action_text}")
+        #print(f"Decision: {action_text}")
         state, reward, done, info = env.step(action)
-        env.render()
+
+        '''if env.env.nominated_player != player:
+            print(f"SOLD: {env.env.history[player]}")
+            print(f"Player {env.env.nominated_player} is now up for auction.")
+        '''
+        #env.render()
 
     game_score_arr = env.env.get_game_score()
-    player_scores = {int(i): game_score_arr[i] for i in range(len(game_score_arr))}
+    player_scores = {int(i): int(game_score_arr[i]) for i in range(len(game_score_arr))}
 
     with open(export_file, 'w') as f:
         f.write(str(env.env.history))
@@ -261,7 +299,7 @@ def run_auction(export_file, strategies_dict):
 
     env.close()
 
-if __name__ == "__main__":
+def main():
     if len(sys.argv) != 3:
         print("Usage: python random_monte_carlo_strat.py <export_file> <strategies_json>")
         sys.exit(1)
@@ -273,4 +311,7 @@ if __name__ == "__main__":
         strategies_dict = json.load(f)
 
     run_auction(export_file, strategies_dict)
+
+if __name__ == "__main__":
+    main()
 

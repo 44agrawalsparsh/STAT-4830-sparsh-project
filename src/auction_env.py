@@ -42,14 +42,11 @@ class AuctionEnv:
         DEFENSEMAN = "defenseman"
     
     class Athlete:
-        def __init__(self, mean, variance, position, owner=-1):
+        def __init__(self, mean, position, owner=-1):
             self.mean = mean
-            self.variance = variance
             self.position = position
             self.owner = owner
             self.rand = np.random.randint(100000000)
-
-            assert self.variance > 0, "Player variance must be positive"
 
         def has_owner(self):
             return self.owner >= 0
@@ -59,9 +56,9 @@ class AuctionEnv:
 
         def __repr__(self):
             if self.owner >= 0:
-                return f"Athlete(mean={self.mean}, variance={self.variance}, position={self.position}, owner={self.owner})"
+                return f"Athlete(mean={self.mean}, position={self.position}, owner={self.owner})"
             else:
-                return f"Athlete(mean={self.mean}, variance={self.variance}, position={self.position})"
+                return f"Athlete(mean={self.mean}, position={self.position})"
 
         def __hash__(self):
             return hash(self.rand)
@@ -76,9 +73,7 @@ class AuctionEnv:
             if self.position != other.position:
                 position_order = {AuctionEnv.Position.FORWARD: 0, AuctionEnv.Position.DEFENSEMAN: 1, AuctionEnv.Position.GOALIE: 2}
                 return position_order[self.position] < position_order[other.position]
-            if self.mean != other.mean:
-                return self.mean < other.mean
-            return self.variance < other.variance
+            return self.mean < other.mean
 
     def __init__(self, athletes, num_players=8, budget=100, num_forwards=12, num_defensemen=6, num_goalies=2):
         self.num_players = num_players
@@ -119,7 +114,6 @@ class AuctionEnv:
         self.current_bidder = np.random.randint(self.num_players)
 
         self.members_means = np.zeros(self.num_players)
-        self.members_variances = np.zeros(self.num_players)
 
         self.round_over = False
         self.game_over = False
@@ -150,7 +144,7 @@ class AuctionEnv:
                 move = 1
             else:
                 self.bidders_left[self.current_bidder] = 0
-                if np.sum(self.bidders_left) <= 1:
+                if np.sum(self.bidders_left) == 1:
                     # someone else has won the player
                     if np.sum(self.bidders_left) == 1:
                         winner = np.where(self.bidders_left == 1)[0][0]
@@ -158,10 +152,10 @@ class AuctionEnv:
                         winner = self.current_bidder
                     self.budgets[winner] -= self.current_bid
                     self.history[self.nominated_player] = { "price" : self.current_bid, "winner" : winner }
+                    #print(f"{len(self.history)} Players Won:             {self.nominated_player} has been won by {winner} for {self.current_bid}")
                     self.current_bid = 0
                     self.nominated_player.set_owner(winner)
                     self.members_means[winner] += self.nominated_player.mean
-                    self.members_variances[winner] += self.nominated_player.variance
 
                     if self.nominated_player.position == self.Position.FORWARD:
                         self.members_forwards_needed[winner] -= 1
@@ -178,16 +172,31 @@ class AuctionEnv:
                     else:
                         self.nominated_player = self.athletes.pop()
                         self.bidders_left = np.ones(self.num_players)
+                        for i in range(self.num_players):
+                            if self.nominated_player.position == self.Position.FORWARD:
+                                if self.members_forwards_needed[i] == 0:
+                                    self.bidders_left[i] = 0
+                            elif self.nominated_player.position == self.Position.DEFENSEMAN:
+                                if self.member_defense_needed[i] == 0:
+                                    self.bidders_left[i] = 0
+                            elif self.nominated_player.position == self.Position.GOALIE:
+                                if self.member_goalies_needed[i] == 0:
+                                    self.bidders_left[i] = 0
+
+                        assert np.sum(self.bidders_left) > 0, "No bidders left for this player"
                 self.current_bidder = (self.current_bidder + 1) % self.num_players
                 while self.bidders_left[self.current_bidder] == 0:
                     self.current_bidder = (self.current_bidder + 1) % self.num_players
         if move == 1:
             # Bid up - or at least try to
 
+            if np.sum(self.bidders_left) <= 1 and self.current_bid > 0:
+                self.current_bid -= 1
+
             self.current_bid += 1
 
             #Check one - make sure we have the budget to bid up
-            if self.budgets[self.current_bidder] + self.members_forwards_needed[self.current_bidder] + self.member_defense_needed[self.current_bidder] + self.member_goalies_needed[self.current_bidder] < self.current_bid + 1:
+            if self.budgets[self.current_bidder] - self.members_forwards_needed[self.current_bidder] - self.member_defense_needed[self.current_bidder] - self.member_goalies_needed[self.current_bidder] < self.current_bid + 1:
                 self.bidders_left[self.current_bidder] = 0
                 self.current_bid -= 1
                 #self.current_bidder = (self.current_bidder + 1) % self.num_players
@@ -210,6 +219,7 @@ class AuctionEnv:
                     self.current_bid -= 1
                     #self.current_bidder = (self.current_bidder + 1) % self.num_players
                     #return
+            
                 
             #now update bid and stuff
 
@@ -220,6 +230,7 @@ class AuctionEnv:
                 else:
                     winner = self.current_bidder
                 self.budgets[winner] -= self.current_bid
+                #print(f"{self.nominated_player} has been won by {winner} for {self.current_bid}")
                 self.history[self.nominated_player] = { "price" : self.current_bid, "winner" : winner }
                 self.current_bid = 0
                 self.nominated_player.set_owner(winner)
@@ -227,7 +238,6 @@ class AuctionEnv:
                 
 
                 self.members_means[winner] += self.nominated_player.mean
-                self.members_variances[winner] += self.nominated_player.variance
 
                 if self.nominated_player.position == self.Position.FORWARD:
                     self.members_forwards_needed[winner] -= 1
@@ -241,12 +251,29 @@ class AuctionEnv:
 
                 if len(self.athletes) == 0:
                     self.game_over = True
+                    return
                 else:
                     self.nominated_player = self.athletes.pop()
                     self.bidders_left = np.ones(self.num_players)
+                    for i in range(self.num_players):
+                        if self.nominated_player.position == self.Position.FORWARD:
+                            if self.members_forwards_needed[i] == 0:
+                                self.bidders_left[i] = 0
+                        elif self.nominated_player.position == self.Position.DEFENSEMAN:
+                            if self.member_defense_needed[i] == 0:
+                                self.bidders_left[i] = 0
+                        elif self.nominated_player.position == self.Position.GOALIE:
+                            if self.member_goalies_needed[i] == 0:
+                                self.bidders_left[i] = 0
+                    assert np.sum(self.bidders_left) > 0, "No bidders left for this player"
+            cnt = 1
             self.current_bidder = (self.current_bidder + 1) % self.num_players
             while self.bidders_left[self.current_bidder] == 0:
+                cnt += 1
                 self.current_bidder = (self.current_bidder + 1) % self.num_players
+
+                if cnt > self.num_players + 3:
+                    pdb.set_trace()
                 
             
         
@@ -268,7 +295,6 @@ class AuctionEnv:
         '''
         state = {
             "members_means": self.members_means,
-            "members_variances": self.members_variances,
             "budgets": self.budgets,
             "members_forwards_needed": self.members_forwards_needed,
             "member_defense_needed": self.member_defense_needed,
@@ -278,7 +304,6 @@ class AuctionEnv:
             "goalies_left": self.goalies_left,
             "nominated_player": {
                 "mean" : self.nominated_player.mean,
-                "variance" : self.nominated_player.variance,
                 "position" : self.nominated_player.position
             },
             "current_bid": self.current_bid,
@@ -286,18 +311,18 @@ class AuctionEnv:
             "bidders_left": self.bidders_left,
             "athletes_left" : {
                 "forwards": sorted(
-                [(athlete.mean, athlete.variance) for athlete in self.athletes if athlete.position == self.Position.FORWARD],
-                key=lambda x: x[0],
+                [athlete.mean for athlete in self.athletes if athlete.position == self.Position.FORWARD],
+                key=lambda x: x,
                 reverse=True
                 ),
                 "defensemen": sorted(
-                [(athlete.mean, athlete.variance) for athlete in self.athletes if athlete.position == self.Position.DEFENSEMAN],
-                key=lambda x: x[0],
+                [athlete.mean for athlete in self.athletes if athlete.position == self.Position.DEFENSEMAN],
+                key=lambda x: x,
                 reverse=True
                 ),
                 "goalies": sorted(
-                [(athlete.mean, athlete.variance) for athlete in self.athletes if athlete.position == self.Position.GOALIE],
-                key=lambda x: x[0],
+                [athlete.mean for athlete in self.athletes if athlete.position == self.Position.GOALIE],
+                key=lambda x: x,
                 reverse=True
                 )
             }
@@ -307,11 +332,19 @@ class AuctionEnv:
     
     def get_game_score(self):
         if self.game_over:
+            sorted_indices = np.argsort(self.members_means)
+            ranks = np.empty_like(sorted_indices)
+            ranks[sorted_indices] = np.arange(1, self.num_players + 1)
+            return ranks
+        else:
+            raise ValueError("Game is not over")
+        
+        '''if self.game_over:
             outcomes = np.random.randn(NUM_SIMS, self.num_players) * np.sqrt(self.members_variances) + self.members_means
             ranks = outcomes.argsort(axis=1).argsort(axis=1) + 1
             return ranks.mean(axis=0)
         else:
-            raise ValueError("Game is not over")
+            raise ValueError("Game is not over")'''
 
 
 def generate_athletes(num_players, num_forwards, num_defensemen, num_goalies, shape, scale):
@@ -321,14 +354,12 @@ def generate_athletes(num_players, num_forwards, num_defensemen, num_goalies, sh
     athletes = []
     for _ in range(num_forwards * num_players):
         mean = gamma.rvs(a=shape, scale=scale)
-        variance = 0.1 * mean + np.random.normal(0, 2)**2
-        athletes.append(AuctionEnv.Athlete(mean=mean, variance=variance, position=AuctionEnv.Position.FORWARD))
+        athletes.append(AuctionEnv.Athlete(mean=mean, position=AuctionEnv.Position.FORWARD))
     for _ in range(num_defensemen * num_players):
         mean = gamma.rvs(a=shape, scale=scale*0.55)
-        variance = 0.1 * mean + np.random.normal(0, 2)**2
-        athletes.append(AuctionEnv.Athlete(mean=mean, variance=variance, position=AuctionEnv.Position.DEFENSEMAN))
+        athletes.append(AuctionEnv.Athlete(mean=mean, position=AuctionEnv.Position.DEFENSEMAN))
     for _ in range(num_goalies * num_players):
-        athletes.append(AuctionEnv.Athlete(mean=gamma.rvs(a=shape, scale=scale), variance=gamma.rvs(a=shape, scale=scale), position=AuctionEnv.Position.GOALIE))
+        athletes.append(AuctionEnv.Athlete(mean=gamma.rvs(a=shape, scale=scale), position=AuctionEnv.Position.GOALIE))
     return athletes
 
 '''

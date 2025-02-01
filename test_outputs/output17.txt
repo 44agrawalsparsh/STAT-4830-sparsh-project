@@ -1,0 +1,114 @@
+Team 0 (Strategy: {'type': 'value_above_replacement'}):
+Mean      Position       PriceScore
+10.28      Position.DEFENSEMAN 0.00  3.00 
+11.09      Position.FORWARD 1.00  3.00 
+14.55      Position.FORWARD 2.00  3.00 
+17.38      Position.FORWARD 2.00  3.00 
+26.82      Position.DEFENSEMAN 18.00 3.00 
+32.93      Position.GOALIE 0.00  3.00 
+33.70      Position.DEFENSEMAN 28.00 3.00 
+49.24      Position.DEFENSEMAN 2.00  3.00 
+49.54      Position.FORWARD 1.00  3.00 
+51.97      Position.FORWARD 11.00 3.00 
+63.02      Position.FORWARD 15.00 3.00 
+64.30      Position.FORWARD 16.00 3.00 
+78.78      Position.FORWARD 1.00  3.00 
+79.65      Position.GOALIE 0.00  3.00 
+Total      583.25     42.00
+
+
+Team 1 (Strategy: {'type': 'value_above_replacement'}):
+Mean      Position       PriceScore
+5.68       Position.DEFENSEMAN 0.00  4.00 
+10.51      Position.DEFENSEMAN 1.00  4.00 
+16.65      Position.DEFENSEMAN 6.00  4.00 
+24.95      Position.DEFENSEMAN 15.00 4.00 
+32.95      Position.FORWARD 6.00  4.00 
+36.33      Position.FORWARD 6.00  4.00 
+36.86      Position.FORWARD 2.00  4.00 
+47.27      Position.FORWARD 11.00 4.00 
+52.72      Position.GOALIE 8.00  4.00 
+61.62      Position.FORWARD 15.00 4.00 
+74.16      Position.FORWARD 18.00 4.00 
+76.74      Position.FORWARD 1.00  4.00 
+79.84      Position.FORWARD 8.00  4.00 
+100.26     Position.GOALIE 1.00  4.00 
+Total      656.54     56.00
+
+
+Team 2 (Strategy: {'type': 'flip', 'p': 0.5552962326339973}):
+Mean      Position       PriceScore
+12.96      Position.GOALIE 0.00  1.00 
+14.68      Position.FORWARD 2.00  1.00 
+15.75      Position.DEFENSEMAN 7.00  1.00 
+16.23      Position.FORWARD 1.00  1.00 
+26.44      Position.FORWARD 1.00  1.00 
+28.45      Position.DEFENSEMAN 3.00  1.00 
+39.61      Position.FORWARD 7.00  1.00 
+41.41      Position.FORWARD 3.00  1.00 
+46.27      Position.FORWARD 10.00 1.00 
+46.35      Position.DEFENSEMAN 6.00  1.00 
+56.67      Position.DEFENSEMAN 4.00  1.00 
+57.32      Position.GOALIE 2.00  1.00 
+58.56      Position.FORWARD 13.00 1.00 
+68.89      Position.FORWARD 12.00 1.00 
+Total      529.59     14.00
+
+
+Team 3 (Strategy: {'type': 'value_above_replacement'}):
+Mean      Position       PriceScore
+1.91       Position.FORWARD 1.00  2.00 
+11.17      Position.DEFENSEMAN 3.00  2.00 
+16.84      Position.DEFENSEMAN 1.00  2.00 
+20.45      Position.DEFENSEMAN 14.00 2.00 
+24.45      Position.FORWARD 1.00  2.00 
+33.86      Position.FORWARD 1.00  2.00 
+34.17      Position.FORWARD 1.00  2.00 
+38.00      Position.DEFENSEMAN 17.00 2.00 
+43.76      Position.GOALIE 22.00 2.00 
+44.04      Position.GOALIE 2.00  2.00 
+47.88      Position.FORWARD 1.00  2.00 
+50.22      Position.FORWARD 1.00  2.00 
+61.04      Position.FORWARD 11.00 2.00 
+120.47     Position.FORWARD 22.00 2.00 
+Total      548.26     28.00
+
+
+Team 4 (Strategy: {'type': 'value_above_replacement'}):
+Mean      Position       PriceScore
+13.54      Position.DEFENSEMAN 1.00  5.00 
+13.55      Position.FORWARD 1.00  5.00 
+19.14      Position.FORWARD 1.00  5.00 
+24.42      Position.FORWARD 2.00  5.00 
+30.82      Position.DEFENSEMAN 3.00  5.00 
+39.89      Position.DEFENSEMAN 30.00 5.00 
+45.30      Position.FORWARD 8.00  5.00 
+47.32      Position.FORWARD 1.00  5.00 
+59.52      Position.FORWARD 10.00 5.00 
+60.91      Position.DEFENSEMAN 20.00 5.00 
+62.50      Position.FORWARD 14.00 5.00 
+73.58      Position.GOALIE 1.00  5.00 
+93.66      Position.FORWARD 5.00  5.00 
+102.72     Position.GOALIE 1.00  5.00 
+Total      686.87     70.00
+
+
+Team 5 (Strategy: {'type': 'flip', 'p': 0.34810358856593765}):
+Mean      Position       PriceScore
+8.14       Position.DEFENSEMAN 1.00  6.00 
+15.45      Position.DEFENSEMAN 1.00  6.00 
+20.82      Position.GOALIE 1.00  6.00 
+32.12      Position.FORWARD 2.00  6.00 
+33.28      Position.FORWARD 3.00  6.00 
+36.09      Position.FORWARD 7.00  6.00 
+37.94      Position.DEFENSEMAN 2.00  6.00 
+42.00      Position.DEFENSEMAN 1.00  6.00 
+43.14      Position.GOALIE 1.00  6.00 
+43.41      Position.FORWARD 2.00  6.00 
+51.06      Position.FORWARD 13.00 6.00 
+54.72      Position.FORWARD 2.00  6.00 
+150.02     Position.FORWARD 2.00  6.00 
+173.95     Position.FORWARD 2.00  6.00 
+Total      742.14     84.00
+
+

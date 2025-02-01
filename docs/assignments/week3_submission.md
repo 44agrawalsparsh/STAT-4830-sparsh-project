@@ -68,6 +68,10 @@ For both of these my solution will be to simplify the auction set up I use. A du
 
 2. **Assymetric Information**: An even more realistic model is one where certain players have absolutely no information on player valuations. Maybe because they joined the league last minute. I want to model a scenario where players either have information or no information and must behave optimally. Ideally I would also like to have degrees of information for players - and also specializations. Perhaps, players have some information on some players and not others?
 
+I think one consideration for this latter approach is how we model hidden information we are simulating. For example, players prior bidding patterns could reveal information about how informed they are. Do we need to model this into our MCTS?
+
+I wonder if as a baseline we could ignore that information. Perhaps we assume that information can't be deduced? Or we could try to have the RL agent also try to predict informativeness - I'm afraid that this might be too complicated, however.
+
 ### Technical Approach (1/2 page)
 - **Mathematical formulation** 
 
@@ -158,13 +162,9 @@ My initial work simulates an auction draft with chosen strategies. To make the M
 
 Users can try a few basic strategies including an MCTS. While the MCTS does not always "win" the draft - it is usually one of the better strategies.
 
-
-An couple of simulated drafts can be seen in test_outputs. In the first draft, we had one monte carlo agent which finished 2nd (higher score is better) and in the second draft with 3 monte carlo agents they finished, 1st, 2nd and 4th. 
-
-This is to say while naive strategies such as bidding up to the players mean score / sum scores can be competitive with the monte carlo agent it still performs better than ultra trivial strategies such as always flipping which the monte carlo agent assumes.
+Some 21 tests are shown in test_outputs - the monte carlo method appears to win in every game it is present in. However there are situations where when multiple monte carlo agents are present one is beaten by another naive strategy.
 
 The makes me more confident that when we use self-play RL with MCTS which will improve the assumptions that we make when simulating the game, we will generate more optimal strategies.
-
 
 - **Current limitations** 
 
@@ -178,7 +178,7 @@ My MCTS runs 100 simulations per move split over four subprocesses. Combined in 
 
 - **Unexpected challenges** 
 
-I wasn't expecting simulating a single episode (draft) to take this long. I am a little bit worried about how much compute I will need for this game. 
+I wasn't expecting simulating a single episode (draft) to take this long. I am a little bit worried about how much compute I will need for this game. It can take up to 15 minutes to simulate even a simplified draft.
 
 I wonder if I eliminate the variance component of the game and focus solely on the raw mean score - with more complexities surrounding information assymetry - I will get a faster game to simulate that better mimics the real world scenario. In my tests, variance seems to play very little role in affecting the order of ranks across the agents. In the real world the distributions of performances for players are not normal either so the value add of modelling variances may be unneccessary.
 

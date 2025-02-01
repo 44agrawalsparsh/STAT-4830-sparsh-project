@@ -12,7 +12,6 @@ def format_roster(history, strategies_json, player_scores):
     for athlete, details in history.items():
         teams[details['winner']].append({
             'mean': round(athlete.mean, 2),
-            'variance': round(athlete.variance, 2),
             'position': athlete.position,
             'price': round(details['price'], 2),
             'strategy': strategies_json[details['winner']],
@@ -23,13 +22,12 @@ def format_roster(history, strategies_json, player_scores):
 def print_roster(teams, file=sys.stdout):
     for team, roster in teams.items():
         total_mean = sum(player['mean'] for player in roster)
-        total_variance = sum(player['variance'] for player in roster)
         total_score = sum(player['score'] for player in roster)
         print(f"Team {team} (Strategy: {roster[0]['strategy']}):", file=file)
-        print(f"{'Mean':<10}{'Variance':<10}{'Position':<15}{'Price':<5}{'Score':<5}", file=file)
+        print(f"{'Mean':<10}{'Position':<15}{'Price':<5}{'Score':<5}", file=file)
         for player in sorted(roster, key=lambda x: x['mean']):
-            print(f"{player['mean']:<10.2f} {player['variance']:<10.2f} {player['position']:<15} {player['price']:<5.2f} {player['score']:<5.2f}", file=file)
-        print(f"{'Total':<10} {total_mean:<10.2f} {total_variance:<10.2f} {total_score:<5.2f}", file=file)
+            print(f"{player['mean']:<10.2f} {player['position']:<15} {player['price']:<5.2f} {player['score']:<5.2f}", file=file)
+        print(f"{'Total':<10} {total_mean:<10.2f} {total_score:<5.2f}", file=file)
         print("\n", file=file)
 
 def main(history_file_path, strategies_json_path, output_file_path):
@@ -53,3 +51,5 @@ if __name__ == "__main__":
     strategies_json_path = sys.argv[2]
     output_file_path = sys.argv[3]
     main(history_file_path, strategies_json_path, output_file_path)
+
+
