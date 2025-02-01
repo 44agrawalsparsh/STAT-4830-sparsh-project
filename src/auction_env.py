@@ -29,7 +29,7 @@ class AuctionEnv:
 
     The auction ends for a player when only one member remains in the bidding, and the player is awarded to them for the final price.
 
-    Objective: My overarching goal is to maximize P(win), determined by the cumulative realized value of the drafted players compared to other members. This creates a complex strategic environment where decisions need to account for budget constraints, remaining roster spots, and the uncertainty in player valuations.
+    Objective: My overarching goal is to maximize E(rank), determined by the cumulative realized value of the drafted players compared to other members. This creates a complex strategic environment where decisions need to account for budget constraints, remaining roster spots, and the uncertainty in player valuations.
         
     Below we define the environment class for the auction game. The environment is responsible for managing the game state, executing actions, and providing feedback to the agents.
 
