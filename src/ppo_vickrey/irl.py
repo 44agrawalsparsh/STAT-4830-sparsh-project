@@ -39,7 +39,7 @@ if __name__ == "__main__":
 				except Exception:
 					print("Invalid input. Please enter a number.")
 
-		action = get_valid_bid("Boose", state["budgets"][0])
+		action = get_valid_bid("Rishabh", state["budgets"][0])
 		state = game.getNextState(state, action)
 		action = get_valid_bid("Sparsh", state["budgets"][1])
 		state = game.getNextState(state, action)

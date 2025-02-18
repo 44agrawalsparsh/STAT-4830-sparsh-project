@@ -1,0 +1,6 @@
+Means: [313.99 434.72]
+Budgets: [1000. 1000.]
+Forwards Needed: [8. 2.]
+Defense Needed: [3. 0.]
+Goalies Needed: [0. 1.]
+Rewards: [0.04874201 1.27643904]
